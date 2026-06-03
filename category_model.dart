@@ -1,5 +1,4 @@
 // lib/models/category_model.dart
-import 'package:flutter/material.dart';
 
 class CategoryModel {
   final String id;
@@ -107,6 +106,99 @@ class SubCategoryModel {
 }
 
 class VideoLinkModel {
+  final String id;
+  final String title;
+  final String url;
+  final VideoType type;
+  final String quality;
+  final String? thumbnailUrl;
+  final bool isWorking;
+
+  const VideoLinkModel({
+    required this.id,
+    required this.title,
+    required this.url,
+    required this.type,
+    this.quality = 'HD',
+    this.thumbnailUrl,
+    this.isWorking = true,
+  });
+
+  factory VideoLinkModel.fromMap(Map<String, dynamic> map) {
+    return VideoLinkModel(
+      id: map['id'] ?? '',
+      title: map['title'] ?? '',
+      url: map['url'] ?? '',
+      type: VideoType.values.firstWhere(
+        (e) => e.name == (map['type'] ?? 'hls'),
+        orElse: () => VideoType.hls,
+      ),
+      quality: map['quality'] ?? 'HD',
+      thumbnailUrl: map['thumbnailUrl'],
+      isWorking: map['isWorking'] ?? true,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'title': title,
+      'url': url,
+      'type': type.name,
+      'quality': quality,
+      'thumbnailUrl': thumbnailUrl,
+      'isWorking': isWorking,
+    };
+  }
+}
+
+enum VideoType { hls, mp4, youtube, dash }
+
+class NotificationModel {
+  final String id;
+  final String title;
+  final String body;
+  final String? imageUrl;
+  final String? deepLink;
+  final DateTime timestamp;
+  final bool isRead;
+
+  const NotificationModel({
+    required this.id,
+    required this.title,
+    required this.body,
+    this.imageUrl,
+    this.deepLink,
+    required this.timestamp,
+    this.isRead = false,
+  });
+
+  factory NotificationModel.fromMap(Map<String, dynamic> map) {
+    return NotificationModel(
+      id: map['id'] ?? '',
+      title: map['title'] ?? '',
+      body: map['body'] ?? '',
+      imageUrl: map['imageUrl'],
+      deepLink: map['deepLink'],
+      timestamp: map['timestamp'] is int
+          ? DateTime.fromMillisecondsSinceEpoch(map['timestamp'])
+          : DateTime.now(),
+      isRead: map['isRead'] ?? false,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'title': title,
+      'body': body,
+      'imageUrl': imageUrl,
+      'deepLink': deepLink,
+      'timestamp': timestamp.millisecondsSinceEpoch,
+      'isRead': isRead,
+    };
+  }
+}class VideoLinkModel {
   final String id;
   final String title;
   final String url;
