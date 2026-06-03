@@ -82,7 +82,9 @@ class AppTheme {
       drawerTheme: const DrawerThemeData(
         backgroundColor: AppColors.drawerBg,
       ),
-      cardTheme: CardThemeData(
+
+      // ✅ FIX HERE
+      cardTheme: CardTheme(
         color: AppColors.cardBg,
         elevation: 4,
         shape: RoundedRectangleBorder(
@@ -90,6 +92,7 @@ class AppTheme {
           side: const BorderSide(color: AppColors.cardBorder, width: 0.5),
         ),
       ),
+
       dividerColor: AppColors.cardBorder,
       useMaterial3: true,
     );
