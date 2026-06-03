@@ -2,64 +2,44 @@ name: Build TEN SPORTS HD APK
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 
 jobs:
-  build-apk:
+  build:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Install unzip
-        run: sudo apt-get install -y unzip
-
-      - name: Extract ZIP File
-        run: |
-          unzip -o TEN_SPORTS_HD_WithGitHub.zip -d extracted
-          echo "===== Extracted contents ====="
-          ls extracted/
-          echo "===== Inner folder ====="
-          ls extracted/ten_sports_hd/
-
-      - name: Move Flutter project to root working dir
-        run: |
-          cp -r extracted/ten_sports_hd/* .
-          echo "===== Final root contents ====="
-          ls -la
-
       - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '17'
+          distribution: temurin
+          java-version: 17
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.22.0'
-          channel: 'stable'
+          flutter-version: 3.22.0
+          channel: stable
           cache: true
 
-      - name: Create Asset Placeholder Fonts
-        run: |
-          mkdir -p assets/fonts assets/images assets/icons assets/animations
-          touch assets/fonts/Rajdhani-Regular.ttf
-          touch assets/fonts/Rajdhani-Bold.ttf
-          touch assets/fonts/Rajdhani-SemiBold.ttf
+      - name: Check project structure
+        run: ls -R
 
-      - name: Flutter pub get
+      - name: Install dependencies
         run: flutter pub get
 
-      - name: Build Release APK
-        run: flutter build apk --release --no-shrink
+      - name: Analyze project
+        run: flutter analyze || true
+
+      - name: Build APK (Release)
+        run: flutter build apk --release
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: TEN-SPORTS-HD-APK
           path: build/app/outputs/flutter-apk/app-release.apk
-          retention-days: 30
