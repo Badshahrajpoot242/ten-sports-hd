@@ -26,15 +26,22 @@ jobs:
           channel: stable
           cache: true
 
+      # 🔥 IMPORTANT FIX: verify structure
       - name: Check project structure
-        run: ls -R
+        run: |
+          pwd
+          ls -R
+
+      - name: Fix permissions
+        run: chmod -R 777 .
 
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Analyze project
-        run: flutter analyze || true
+      - name: Clean project
+        run: flutter clean
 
+      # 🔥 IMPORTANT FIX: force correct directory
       - name: Build APK (Release)
         run: flutter build apk --release
 
