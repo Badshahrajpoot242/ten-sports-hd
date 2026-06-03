@@ -2,7 +2,7 @@ plugins {
     id "com.android.application"
     id "kotlin-android"
     id "dev.flutter.flutter-gradle-plugin"
-    // id "com.google.gms.google-services" // Uncomment for Firebase
+    id "com.google.gms.google-services" // ✅ FIX: Firebase/Google services enable
 }
 
 def localProperties = new Properties()
@@ -70,4 +70,7 @@ flutter {
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'androidx.multidex:multidex:2.0.1'
+
+    // ✅ FIX: Firebase BOM (required for google-services)
+    implementation platform('com.google.firebase:firebase-bom:33.1.2')
 }
