@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+
 import '../config/app_theme.dart';
+import '../config/app_constants.dart'; // ✅ FIX: MISSING IMPORT ADDED
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -33,7 +35,6 @@ class AppDrawer extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Logo
                 Container(
                   width: 70,
                   height: 70,
@@ -76,7 +77,6 @@ class AppDrawer extends StatelessWidget {
             ),
           ),
 
-          // Menu Items
           Expanded(
             child: ListView(
               padding: const EdgeInsets.symmetric(vertical: 8),
@@ -84,9 +84,7 @@ class AppDrawer extends StatelessWidget {
                 _DrawerItem(
                   icon: Icons.home_rounded,
                   label: 'Home',
-                  onTap: () {
-                    Navigator.of(context).pop();
-                  },
+                  onTap: () => Navigator.of(context).pop(),
                 ),
                 _DrawerItem(
                   icon: Icons.share_rounded,
@@ -107,6 +105,109 @@ class AppDrawer extends StatelessWidget {
                 _DrawerItem(
                   icon: Icons.mail_rounded,
                   label: 'Contact Us',
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    Navigator.of(context).pushNamed('/contact');
+                  },
+                ),
+                const Divider(
+                  color: AppColors.cardBorder,
+                  height: 32,
+                  indent: 24,
+                  endIndent: 24,
+                ),
+                _DrawerItem(
+                  icon: Icons.exit_to_app_rounded,
+                  label: 'Exit App',
+                  iconColor: AppColors.accent,
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        backgroundColor: AppColors.cardBg,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        title: const Text(
+                          'Exit App',
+                          style: TextStyle(color: AppColors.textPrimary),
+                        ),
+                        content: const Text(
+                          'Are you sure you want to exit?',
+                          style: TextStyle(color: AppColors.textSecondary),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(ctx).pop(),
+                            child: const Text('Cancel'),
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              SystemNavigator.pop();
+                            },
+                            child: const Text('Exit'),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text(
+              'Version ${AppConstants.appVersion}',
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _launchUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+}
+
+class _DrawerItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final Color? iconColor;
+
+  const _DrawerItem({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.iconColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+      leading: Icon(icon, color: iconColor ?? AppColors.accent),
+      title: Text(
+        label,
+        style: const TextStyle(
+          fontWeight: FontWeight.w600,
+          color: AppColors.textPrimary,
+        ),
+      ),
+      onTap: onTap,
+    );
+  }
+}                  label: 'Contact Us',
                   onTap: () {
                     Navigator.of(context).pop();
                     Navigator.of(context).pushNamed('/contact');
