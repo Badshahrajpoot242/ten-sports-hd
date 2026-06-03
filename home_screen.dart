@@ -1,12 +1,15 @@
 // lib/screens/home/home_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../config/app_theme.dart';
-import '../../models/category_model.dart';
-import '../../providers/app_provider.dart';
-import '../../widgets/app_drawer.dart';
-import '../../widgets/sport_category_card.dart';
-import '../categories/sub_category_screen.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shimmer/shimmer.dart';
+import '../../core/theme/app_theme.dart';
+import '../../providers/home_provider.dart';
+import '../../providers/settings_provider.dart';
+import '../../data/models/button_model.dart';
+import '../../widgets/common/app_drawer.dart';
+import '../channel/channel_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,264 +18,507 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-
+class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<AppProvider>().loadCategories();
-      _animationController.forward();
+      context.read<HomeProvider>().loadButtons();
+      context.read<SettingsProvider>().init();
     });
   }
 
   @override
+  Widget build(BuildContext context) {
+    return Consumer<SettingsProvider>(
+      builder: (context, settingsProvider, _) {
+        if (settingsProvider.settings.maintenanceMode) {
+          return _MaintenanceScreen();
+        }
+        return _HomeContent();
+      },
+    );
+  }
+}
+
+class _HomeContent extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppTheme.darkBg,
+      drawer: const AppDrawer(),
+      appBar: AppBar(
+        title: ShaderMask(
+          shaderCallback: (bounds) => const LinearGradient(
+            colors: [AppTheme.primaryRed, AppTheme.accentGold],
+          ).createShader(bounds),
+          child: const Text(
+            'TEN SPORTS HD',
+            style: TextStyle(
+              color: Colors.white,
+              fontFamily: 'AppFont',
+              letterSpacing: 2,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications_none_rounded),
+            onPressed: () {},
+          ),
+        ],
+      ),
+      body: Consumer<HomeProvider>(
+        builder: (context, provider, _) {
+          if (provider.isLoading) return _LoadingGrid();
+          if (provider.error != null) return _ErrorWidget(
+            message: provider.error!,
+            onRetry: provider.retry,
+          );
+          if (provider.buttons.isEmpty) return _EmptyWidget();
+          return _ButtonGrid(buttons: provider.buttons);
+        },
+      ),
+    );
+  }
+}
+
+class _ButtonGrid extends StatelessWidget {
+  final List<ButtonModel> buttons;
+  const _ButtonGrid({required this.buttons});
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<SettingsProvider>(
+      builder: (context, settingsProvider, _) {
+        final settings = settingsProvider.settings;
+        return RefreshIndicator(
+          color: AppTheme.primaryRed,
+          backgroundColor: AppTheme.cardBg,
+          onRefresh: () async {
+            context.read<HomeProvider>().retry();
+            await Future.delayed(const Duration(milliseconds: 800));
+          },
+          child: CustomScrollView(
+            slivers: [
+              // Banner
+              if (settings.bannerImage.isNotEmpty)
+                SliverToBoxAdapter(
+                  child: _BannerWidget(imageUrl: settings.bannerImage),
+                ),
+
+              // Live Indicator
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Row(
+                    children: [
+                      _LiveBadge(),
+                      SizedBox(width: 10),
+                      Text(
+                        'ALL CHANNELS',
+                        style: TextStyle(
+                          color: AppTheme.textSecondary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 2,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Grid
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 24),
+                sliver: SliverGrid(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) => _ButtonCard(
+                      button: buttons[index],
+                      index: index,
+                    ),
+                    childCount: buttons.length,
+                  ),
+                  gridDelegate:
+                      const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    childAspectRatio: 1.1,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ButtonCard extends StatelessWidget {
+  final ButtonModel button;
+  final int index;
+
+  const _ButtonCard({required this.button, required this.index});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ChannelScreen(button: button),
+        ),
+      ),
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 200 + index * 50),
+        decoration: BoxDecoration(
+          color: AppTheme.cardBg,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: AppTheme.dividerColor,
+            width: 1,
+          ),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x22000000),
+              blurRadius: 8,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            // Background glow
+            Positioned(
+              top: -20,
+              right: -20,
+              child: Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppTheme.primaryRed.withOpacity(0.05),
+                ),
+              ),
+            ),
+
+            Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Logo
+                  _ChannelLogo(logoUrl: button.logo),
+                  const SizedBox(height: 12),
+
+                  // Title
+                  Text(
+                    button.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: AppTheme.textPrimary,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                      fontFamily: 'AppFont',
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+
+                  // Description
+                  Text(
+                    button.description,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: AppTheme.textMuted,
+                      fontSize: 11,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Arrow
+            const Positioned(
+              bottom: 12,
+              right: 12,
+              child: Icon(
+                Icons.play_circle_fill_rounded,
+                color: AppTheme.primaryRed,
+                size: 22,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ChannelLogo extends StatelessWidget {
+  final String logoUrl;
+  const _ChannelLogo({required this.logoUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 52,
+      height: 52,
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceBg,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppTheme.dividerColor),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: logoUrl.isEmpty
+            ? const Center(
+                child: Text('🏏', style: TextStyle(fontSize: 26)))
+            : CachedNetworkImage(
+                imageUrl: logoUrl,
+                fit: BoxFit.cover,
+                placeholder: (_, __) => const Center(
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppTheme.primaryRed,
+                    ),
+                  ),
+                ),
+                errorWidget: (_, __, ___) => const Center(
+                  child: Text('🏏', style: TextStyle(fontSize: 26)),
+                ),
+              ),
+      ),
+    );
+  }
+}
+
+class _BannerWidget extends StatelessWidget {
+  final String imageUrl;
+  const _BannerWidget({required this.imageUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: CachedNetworkImage(
+          imageUrl: imageUrl,
+          height: 160,
+          width: double.infinity,
+          fit: BoxFit.cover,
+          placeholder: (_, __) => Container(
+            height: 160,
+            color: AppTheme.cardBg,
+            child: const Center(
+              child: CircularProgressIndicator(color: AppTheme.primaryRed),
+            ),
+          ),
+          errorWidget: (_, __, ___) => const SizedBox.shrink(),
+        ),
+      ),
+    );
+  }
+}
+
+class _LiveBadge extends StatefulWidget {
+  const _LiveBadge();
+
+  @override
+  State<_LiveBadge> createState() => _LiveBadgeState();
+}
+
+class _LiveBadgeState extends State<_LiveBadge>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _anim;
+
+  @override
+  void initState() {
+    super.initState();
+    _anim = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    )..repeat(reverse: true);
+  }
+
+  @override
   void dispose() {
-    _animationController.dispose();
+    _anim.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.primary,
-      drawer: const AppDrawer(),
-      body: CustomScrollView(
-        slivers: [
-          // App Bar
-          SliverAppBar(
-            pinned: true,
-            expandedHeight: 130,
-            backgroundColor: AppColors.primary,
-            elevation: 0,
-            leading: Builder(
-              builder: (ctx) => IconButton(
-                onPressed: () => Scaffold.of(ctx).openDrawer(),
-                icon: const Icon(Icons.menu_rounded, color: Colors.white),
+    return AnimatedBuilder(
+      animation: _anim,
+      builder: (_, __) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          color: AppTheme.liveBadge.withOpacity(0.9 + 0.1 * _anim.value),
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 6,
+              height: 6,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white,
               ),
             ),
-            actions: [
-              Consumer<AppProvider>(
-                builder: (_, provider, __) => Stack(
-                  children: [
-                    IconButton(
-                      onPressed: () {},
-                      icon: const Icon(Icons.notifications_outlined,
-                          color: Colors.white),
-                    ),
-                    if (provider.notificationCount > 0)
-                      Positioned(
-                        right: 8,
-                        top: 8,
-                        child: Container(
-                          padding: const EdgeInsets.all(3),
-                          decoration: const BoxDecoration(
-                            color: AppColors.accent,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Text(
-                            '${provider.notificationCount}',
-                            style: const TextStyle(
-                                fontSize: 9, color: Colors.white),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
+            const SizedBox(width: 5),
+            const Text(
+              'LIVE',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w800,
+                fontSize: 10,
+                letterSpacing: 1.5,
               ),
-            ],
-            flexibleSpace: FlexibleSpaceBar(
-              background: _buildAppBarBackground(),
             ),
-          ),
-
-          // Banner Ad Placeholder
-          const SliverToBoxAdapter(child: BannerAdPlaceholder()),
-
-          // Content
-          Consumer<AppProvider>(
-            builder: (context, provider, _) {
-              if (provider.isLoading) {
-                return const SliverFillRemaining(
-                  child: Center(
-                    child: CircularProgressIndicator(color: AppColors.accent),
-                  ),
-                );
-              }
-
-              if (provider.error != null) {
-                return SliverFillRemaining(
-                  child: _buildErrorState(provider),
-                );
-              }
-
-              return SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                sliver: _buildCategoryGrid(provider.categories),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAppBarBackground() {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF1A0A0A), AppColors.primary],
+          ],
         ),
       ),
-      child: Stack(
-        children: [
-          // Background decorative elements
-          Positioned(
-            top: -20,
-            right: -30,
-            child: Container(
-              width: 160,
-              height: 160,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.accent.withOpacity(0.08),
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: 10,
-            left: -20,
-            child: Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.accentGold.withOpacity(0.05),
-              ),
-            ),
-          ),
+    );
+  }
+}
 
-          // Title
-          Positioned(
-            left: 60,
-            right: 60,
-            bottom: 20,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  children: [
-                    const Text('🏆', style: TextStyle(fontSize: 20)),
-                    const SizedBox(width: 8),
-                    const Text(
-                      'TEN SPORTS HD',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
-                        letterSpacing: 1.5,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 2),
-                const Text(
-                  'Live Sports • Anytime • Anywhere',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
-                    letterSpacing: 0.3,
-                  ),
-                ),
-              ],
-            ),
+class _LoadingGrid extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Shimmer.fromColors(
+      baseColor: AppTheme.cardBg,
+      highlightColor: AppTheme.surfaceBg,
+      child: GridView.builder(
+        padding: const EdgeInsets.all(12),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          childAspectRatio: 1.1,
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 10,
+        ),
+        itemCount: 8,
+        itemBuilder: (_, __) => Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
           ),
-        ],
+        ),
       ),
     );
   }
+}
 
-  Widget _buildCategoryGrid(List<CategoryModel> categories) {
-    return SliverGrid(
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: MediaQuery.of(context).size.width > 600 ? 3 : 2,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        childAspectRatio: 1.1,
-      ),
-      delegate: SliverChildBuilderDelegate(
-        (context, index) {
-          final category = categories[index];
-          return AnimatedBuilder(
-            animation: _animationController,
-            builder: (context, child) {
-              final delay = (index * 0.08).clamp(0.0, 0.7);
-              final itemAnimation = CurvedAnimation(
-                parent: _animationController,
-                curve: Interval(delay, (delay + 0.4).clamp(0.0, 1.0),
-                    curve: Curves.easeOut),
-              );
-              return FadeTransition(
-                opacity: itemAnimation,
-                child: SlideTransition(
-                  position: Tween<Offset>(
-                    begin: const Offset(0, 0.3),
-                    end: Offset.zero,
-                  ).animate(itemAnimation),
-                  child: child,
-                ),
-              );
-            },
-            child: SportCategoryCard(
-              category: category,
-              onTap: () => _navigateToCategory(category),
-            ),
-          );
-        },
-        childCount: categories.length,
-      ),
-    );
-  }
+class _ErrorWidget extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+  const _ErrorWidget({required this.message, required this.onRetry});
 
-  Widget _buildErrorState(AppProvider provider) {
+  @override
+  Widget build(BuildContext context) {
     return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.signal_wifi_off_rounded,
+                color: AppTheme.textMuted, size: 64),
+            const SizedBox(height: 16),
+            Text(message,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: AppTheme.textSecondary)),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Retry'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryRed,
+                foregroundColor: Colors.white,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyWidget extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Text('😕', style: TextStyle(fontSize: 48)),
-          const SizedBox(height: 16),
+          Text('📺', style: TextStyle(fontSize: 64)),
+          SizedBox(height: 16),
           Text(
-            provider.error!,
-            style: const TextStyle(color: AppColors.textSecondary),
-            textAlign: TextAlign.center,
+            'No Channels Available',
+            style: TextStyle(color: AppTheme.textSecondary, fontSize: 16),
           ),
-          const SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: provider.refresh,
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.accent),
-            child: const Text('Retry', style: TextStyle(color: Colors.white)),
+          SizedBox(height: 8),
+          Text(
+            'Check back later',
+            style: TextStyle(color: AppTheme.textMuted, fontSize: 13),
           ),
         ],
       ),
     );
   }
+}
 
-  void _navigateToCategory(CategoryModel category) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => SubCategoryScreen(
-          title: category.title,
-          subCategories: category.subCategories,
-          isTopLevel: true,
+class _MaintenanceScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppTheme.darkBg,
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text('🔧', style: TextStyle(fontSize: 72)),
+              const SizedBox(height: 24),
+              const Text(
+                'UNDER MAINTENANCE',
+                style: TextStyle(
+                  color: AppTheme.textPrimary,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  fontFamily: 'AppFont',
+                  letterSpacing: 2,
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'We\'re working on improvements.\nPlease check back soon.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: AppTheme.textSecondary, height: 1.6),
+              ),
+            ],
+          ),
         ),
       ),
     );

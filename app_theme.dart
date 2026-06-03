@@ -1,109 +1,118 @@
-// lib/config/app_theme.dart
-import 'package:flutter/material.dart';
+// lib/core/theme/app_theme.dart
 
-class AppColors {
-  static const Color primary = Color(0xFF0A0E1A);
-  static const Color secondary = Color(0xFF121829);
-  static const Color accent = Color(0xFFE31837);
-  static const Color accentGold = Color(0xFFFFB800);
-  static const Color cardBg = Color(0xFF1A2235);
-  static const Color cardBorder = Color(0xFF2A3550);
-  static const Color textPrimary = Color(0xFFFFFFFF);
-  static const Color textSecondary = Color(0xFF8A9BB8);
-  static const Color liveDot = Color(0xFF00E676);
-  static const Color gradientStart = Color(0xFF0A0E1A);
-  static const Color gradientEnd = Color(0xFF1A2235);
-  static const Color drawerBg = Color(0xFF0D1220);
-}
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class AppTheme {
+  AppTheme._();
+
+  // Brand Colors
+  static const Color primaryRed = Color(0xFFE53935);
+  static const Color deepRed = Color(0xFFB71C1C);
+  static const Color accentGold = Color(0xFFFFD600);
+  static const Color darkBg = Color(0xFF0A0A0F);
+  static const Color cardBg = Color(0xFF141420);
+  static const Color surfaceBg = Color(0xFF1C1C2A);
+  static const Color dividerColor = Color(0xFF2A2A3A);
+  static const Color textPrimary = Color(0xFFFFFFFF);
+  static const Color textSecondary = Color(0xFFB0B0C0);
+  static const Color textMuted = Color(0xFF606070);
+  static const Color liveBadge = Color(0xFFFF1744);
+  static const Color onlineGreen = Color(0xFF00E676);
+
   static ThemeData get darkTheme {
     return ThemeData(
+      useMaterial3: true,
       brightness: Brightness.dark,
-      primaryColor: AppColors.primary,
-      scaffoldBackgroundColor: AppColors.primary,
+      scaffoldBackgroundColor: darkBg,
+      primaryColor: primaryRed,
       colorScheme: const ColorScheme.dark(
-        primary: AppColors.accent,
-        secondary: AppColors.accentGold,
-        surface: AppColors.cardBg,
-        background: AppColors.primary,
-        onPrimary: AppColors.textPrimary,
-        onSecondary: AppColors.textPrimary,
-        onSurface: AppColors.textPrimary,
-      ),
-      fontFamily: 'Rajdhani',
-      textTheme: const TextTheme(
-        displayLarge: TextStyle(
-          fontSize: 32,
-          fontWeight: FontWeight.w700,
-          color: AppColors.textPrimary,
-          letterSpacing: 1.2,
-        ),
-        headlineLarge: TextStyle(
-          fontSize: 24,
-          fontWeight: FontWeight.w700,
-          color: AppColors.textPrimary,
-          letterSpacing: 0.8,
-        ),
-        headlineMedium: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-          color: AppColors.textPrimary,
-        ),
-        bodyLarge: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w400,
-          color: AppColors.textPrimary,
-        ),
-        bodyMedium: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w400,
-          color: AppColors.textSecondary,
-        ),
-        labelLarge: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: AppColors.textPrimary,
-          letterSpacing: 0.5,
-        ),
+        primary: primaryRed,
+        secondary: accentGold,
+        surface: cardBg,
+        background: darkBg,
+        error: Color(0xFFFF5252),
       ),
       appBarTheme: const AppBarTheme(
-        backgroundColor: AppColors.primary,
+        backgroundColor: darkBg,
         elevation: 0,
-        titleTextStyle: TextStyle(
-          fontFamily: 'Rajdhani',
-          fontSize: 22,
-          fontWeight: FontWeight.w700,
-          color: AppColors.textPrimary,
-          letterSpacing: 1.0,
+        centerTitle: true,
+        systemOverlayStyle: SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.light,
         ),
-        iconTheme: IconThemeData(color: AppColors.textPrimary),
+        iconTheme: IconThemeData(color: textPrimary),
+        titleTextStyle: TextStyle(
+          color: textPrimary,
+          fontSize: 20,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 1.5,
+          fontFamily: 'AppFont',
+        ),
       ),
       drawerTheme: const DrawerThemeData(
-        backgroundColor: AppColors.drawerBg,
+        backgroundColor: cardBg,
+        elevation: 16,
       ),
-
-      // ✅ FIX HERE
       cardTheme: CardTheme(
-        color: AppColors.cardBg,
+        color: cardBg,
         elevation: 4,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: AppColors.cardBorder, width: 0.5),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        clipBehavior: Clip.antiAlias,
+      ),
+      textTheme: const TextTheme(
+        displayLarge: TextStyle(
+          color: textPrimary,
+          fontSize: 32,
+          fontWeight: FontWeight.w700,
+          fontFamily: 'AppFont',
+          letterSpacing: 1.2,
+        ),
+        headlineMedium: TextStyle(
+          color: textPrimary,
+          fontSize: 22,
+          fontWeight: FontWeight.w700,
+          fontFamily: 'AppFont',
+        ),
+        titleLarge: TextStyle(
+          color: textPrimary,
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+        ),
+        titleMedium: TextStyle(
+          color: textPrimary,
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.3,
+        ),
+        bodyLarge: TextStyle(
+          color: textSecondary,
+          fontSize: 14,
+        ),
+        bodyMedium: TextStyle(
+          color: textMuted,
+          fontSize: 12,
         ),
       ),
-
-      dividerColor: AppColors.cardBorder,
-      useMaterial3: true,
+      iconTheme: const IconThemeData(
+        color: textPrimary,
+        size: 24,
+      ),
+      dividerTheme: const DividerThemeData(
+        color: dividerColor,
+        thickness: 1,
+      ),
+      progressIndicatorTheme: const ProgressIndicatorThemeData(
+        color: primaryRed,
+      ),
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: surfaceBg,
+        contentTextStyle: const TextStyle(color: textPrimary),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        behavior: SnackBarBehavior.floating,
+      ),
     );
   }
-}
-
-class AppConstants {
-  static const String appName = 'TEN SPORTS HD';
-  static const String appVersion = '1.0.0';
-  static const String contactEmail = 'sultanprince025@gmail.com';
-  static const String privacyPolicyUrl = 'https://example.com/privacy';
-  static const String shareMessage =
-      'Watch live sports in HD! Download TEN SPORTS HD app now.\nhttps://play.google.com/store/apps/details?id=com.tensportshd';
 }

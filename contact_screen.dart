@@ -1,8 +1,9 @@
-// lib/screens/drawer_pages/contact_screen.dart
+// lib/screens/contact/contact_screen.dart
+
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../config/app_theme.dart';
+import '../../core/theme/app_theme.dart';
+import '../../core/constants/app_constants.dart';
 
 class ContactScreen extends StatelessWidget {
   const ContactScreen({super.key});
@@ -10,218 +11,161 @@ class ContactScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.primary,
+      backgroundColor: AppTheme.darkBg,
       appBar: AppBar(
         title: const Text('Contact Us'),
-        backgroundColor: AppColors.primary,
-        elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          onPressed: () => Navigator.of(context).pop(),
+          icon: const Icon(Icons.arrow_back_ios_rounded),
+          onPressed: () => Navigator.pop(context),
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(20),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const SizedBox(height: 20),
+
+            // Icon
             Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(28),
+              width: 100,
+              height: 100,
               decoration: BoxDecoration(
-                gradient: LinearGradient(
+                shape: BoxShape.circle,
+                gradient: const LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [
-                    AppColors.accent.withOpacity(0.15),
-                    AppColors.cardBg,
-                  ],
+                  colors: [AppTheme.primaryRed, AppTheme.deepRed],
                 ),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                    color: AppColors.accent.withOpacity(0.3), width: 1),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.primaryRed.withOpacity(0.4),
+                    blurRadius: 24,
+                    spreadRadius: 4,
+                  ),
+                ],
+              ),
+              child: const Center(
+                child: Icon(Icons.headset_mic_rounded,
+                    color: Colors.white, size: 48),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            const Text(
+              'Get In Touch',
+              style: TextStyle(
+                color: AppTheme.textPrimary,
+                fontSize: 26,
+                fontWeight: FontWeight.w700,
+                fontFamily: 'AppFont',
+                letterSpacing: 1,
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            const Text(
+              'If you need an application or have any issue,\nfeel free to contact us.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: AppTheme.textSecondary,
+                fontSize: 14,
+                height: 1.6,
+              ),
+            ),
+
+            const SizedBox(height: 40),
+
+            // Email Card
+            _ContactCard(
+              icon: Icons.mail_rounded,
+              title: 'Email Us',
+              subtitle: AppConstants.contactEmail,
+              onTap: () => _launchEmail(context),
+            ),
+
+            const SizedBox(height: 12),
+
+            // What we help with
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: AppTheme.cardBg,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppTheme.dividerColor),
               ),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: AppColors.accent.withOpacity(0.1),
-                      border: Border.all(
-                          color: AppColors.accent.withOpacity(0.4), width: 2),
-                    ),
-                    child: const Icon(
-                      Icons.support_agent_rounded,
-                      color: AppColors.accent,
-                      size: 40,
+                  const Text(
+                    'WE CAN HELP WITH',
+                    style: TextStyle(
+                      color: AppTheme.textMuted,
+                      fontSize: 11,
+                      letterSpacing: 2,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Get In Touch',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
+                  const SizedBox(height: 14),
+                  ...[
+                    'App development & customization',
+                    'Video streaming issues',
+                    'Channel not working',
+                    'Feature requests',
+                    'Bug reports',
+                  ].map(
+                    (item) => Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: AppTheme.primaryRed,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            item,
+                            style: const TextStyle(
+                              color: AppTheme.textSecondary,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'We\'re here to help you 24/7',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textSecondary,
-                    ),
-                    textAlign: TextAlign.center,
                   ),
                 ],
               ),
             ),
 
-            const SizedBox(height: 28),
+            const SizedBox(height: 32),
 
-            const Text(
-              'ABOUT US',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textSecondary,
-                letterSpacing: 1.5,
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppColors.cardBg,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppColors.cardBorder),
-              ),
-              child: const Text(
-                'For app development inquiries, business partnerships, or technical support, please contact us by email.',
-                style: TextStyle(
-                  fontSize: 15,
-                  color: AppColors.textPrimary,
-                  height: 1.6,
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            const Text(
-              'CONTACT EMAIL',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textSecondary,
-                letterSpacing: 1.5,
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
-            GestureDetector(
-              onTap: _launchEmail,
-              child: Container(
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: AppColors.cardBg,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppColors.cardBorder),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: AppColors.accent.withOpacity(0.12),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.email_rounded,
-                        color: AppColors.accent,
-                        size: 22,
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            AppConstants.contactEmail,
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          const Text(
-                            'Tap to send email',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Icon(
-                      Icons.open_in_new_rounded,
-                      color: AppColors.textSecondary,
-                      size: 18,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
+            // CTA Button
             SizedBox(
               width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  Clipboard.setData(
-                    const ClipboardData(text: AppConstants.contactEmail),
-                  );
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Email copied to clipboard'),
-                      backgroundColor: AppColors.accent,
-                      duration: Duration(seconds: 2),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.copy_rounded, size: 18),
-                label: const Text('Copy Email Address'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.textPrimary,
-                  side: const BorderSide(color: AppColors.cardBorder),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
+              child: ElevatedButton.icon(
+                onPressed: () => _launchEmail(context),
+                icon: const Icon(Icons.send_rounded),
+                label: const Text(
+                  'SEND EMAIL',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryRed,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 32),
-
-            Center(
-              child: Text(
-                'TEN SPORTS HD v${AppConstants.appVersion}',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.textSecondary,
                 ),
               ),
             ),
@@ -231,147 +175,94 @@ class ContactScreen extends StatelessWidget {
     );
   }
 
-  void _launchEmail() async {
-    final uri = Uri.parse(
-      'mailto:${AppConstants.contactEmail}'
-      '?subject=TEN SPORTS HD - Inquiry'
-      '&body=Hello Team,',
+  Future<void> _launchEmail(BuildContext context) async {
+    final uri = Uri(
+      scheme: 'mailto',
+      path: AppConstants.contactEmail,
+      queryParameters: {
+        'subject': 'TEN SPORTS HD - Support Request',
+        'body': 'Hello,\n\nI need help with:\n\n',
+      },
     );
-
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
-  }
-}                  height: 1.6,
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // Email
-            const Text(
-              'CONTACT EMAIL',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textSecondary,
-                letterSpacing: 1.5,
-              ),
-            ),
-            const SizedBox(height: 12),
-            GestureDetector(
-              onTap: () => _launchEmail(),
-              child: Container(
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: AppColors.cardBg,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppColors.cardBorder),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: AppColors.accent.withOpacity(0.12),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.email_rounded,
-                        color: AppColors.accent,
-                        size: 22,
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            AppConstants.contactEmail,
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                          SizedBox(height: 2),
-                          Text(
-                            'Tap to send email',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Icon(
-                      Icons.open_in_new_rounded,
-                      color: AppColors.textSecondary,
-                      size: 18,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Copy email button
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  Clipboard.setData(
-                      const ClipboardData(text: AppConstants.contactEmail));
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Email copied to clipboard'),
-                      backgroundColor: AppColors.accent,
-                      duration: Duration(seconds: 2),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.copy_rounded, size: 18),
-                label: const Text('Copy Email Address'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.textPrimary,
-                  side: const BorderSide(color: AppColors.cardBorder),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 32),
-
-            // App info
-            Center(
-              child: Text(
-                'TEN SPORTS HD v${AppConstants.appVersion}',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _launchEmail() async {
-    final uri = Uri.parse('mailto:${AppConstants.contactEmail}'
-        '?subject=TEN SPORTS HD - Inquiry'
-        '&body=Hello Team,');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
+    } else {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not launch email client'),
+            backgroundColor: AppTheme.primaryRed,
+          ),
+        );
+      }
     }
+  }
+}
+
+class _ContactCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _ContactCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppTheme.cardBg,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+              color: AppTheme.primaryRed.withOpacity(0.3), width: 1),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryRed.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: AppTheme.primaryRed, size: 24),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: AppTheme.textPrimary,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      color: AppTheme.primaryRed,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios_rounded,
+                color: AppTheme.textMuted, size: 14),
+          ],
+        ),
+      ),
+    );
   }
 }
